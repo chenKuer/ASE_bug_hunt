@@ -4,3 +4,11 @@ python:
   - "3.6"
 script: 
   - pytest
+notifications:
+  email:
+    recipients:
+      - ag4015@columbia.edu
+      - ag4020@columbia.edu
+      - smk2256@columbia.edu
+    on_success: always
+    on_failure: always
