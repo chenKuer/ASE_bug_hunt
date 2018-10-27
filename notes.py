@@ -43,7 +43,7 @@ def add_entry_ui():
     """Add a note"""
     title_string = "Title (press {} when finished)".format(finish_key)
     print(title_string)
-    print("="*len(title_string))
+    print("=" * len(title_string))
     title = sys.stdin.read().strip()
     if title:
         entry_string = "\nEnter your entry: (press {} when finished)".format(finish_key)
@@ -102,26 +102,31 @@ def view_entry(entry):
 
     next_action = input('Action: [e/d/q] : ').lower().strip()
     if next_action == 'd':
-        delete_entry(entry)
+        return delete_entry(entry)
     elif next_action == 'q':
-        return
+        return False
 
 
 def view_entries():
     """View all the notes"""
     page_size = 2
-    entries = Note.select().order_by(Note.timestamp.desc())
-    entries = list(entries)
-    if not entries:
-        print("Your search had no results. Press enter to return to the main menu!")
-        input()
-        clear_screen()
-        return
-
     index = 0
+    reset_flag = True
 
     while 1:
         clear_screen()
+        if reset_flag:
+            # Get entries if reset_flag is True
+            # Will be True initially and on delete/edit entry
+            entries = Note.select().order_by(Note.timestamp.desc())
+            entries = list(entries)
+            if not entries:
+                print("Your search had no results. Press enter to return to the main menu!")
+                input()
+                clear_screen()
+                return
+            index = 0
+            reset_flag = False
         paginated_entries = get_paginated_entries(entries, index, page_size)
         for i in range(len(paginated_entries)):
             entry = paginated_entries[i]
@@ -137,11 +142,13 @@ def view_entries():
         if next_action == 'q':
             break
         elif next_action == 'n':
-            index += page_size
+            if index + page_size < len(entries):
+                index += page_size
         elif next_action == 'p':
-            index -= page_size
+            if index - page_size >= 0:
+                index -= page_size
         elif next_action.isdigit() and int(next_action) < len(paginated_entries) and int(next_action) >= 0:
-            view_entry(paginated_entries[int(next_action)])
+            reset_flag = view_entry(paginated_entries[int(next_action)])
 
 
 MENU = OrderedDict([
