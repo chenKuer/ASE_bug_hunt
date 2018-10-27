@@ -4,8 +4,9 @@ import os
 from peewee import *
 
 path = os.getenv('HOME', os.path.expanduser('~')) + '/.notes'
-db = SqliteDatabase(path + '/diary.db')
+#db = SqliteDatabase(path + '/diary.db')
 
+proxy = Proxy()
 
 class Note(Model):
     """
@@ -17,4 +18,4 @@ class Note(Model):
     tags = CharField(null=True)
 
     class Meta:
-        database = db
+        database = proxy
