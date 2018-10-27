@@ -5,6 +5,7 @@ import sys
 import traceback
 from collections import OrderedDict
 from peewee import *
+import readline
 
 from models import Note
 from utils import *
@@ -90,6 +91,37 @@ def delete_entry(entry):
     return entry.delete_instance()
 
 
+def edit_entry(entry):
+    clear_screen()
+    title_string = "Title (press {} when finished)".format(finish_key)
+    print(title_string)
+    print("=" * len(title_string))
+    readline.set_startup_hook(lambda: readline.insert_text(entry.title))
+    try:
+        title = sys.stdin.read().strip()
+    finally:
+        readline.set_startup_hook()
+    if title:
+        entry_string = "\nEnter your entry: (press {} when finished)".format(finish_key)
+        print(entry_string)
+        readline.set_startup_hook(lambda: readline.insert_text(entry.content))
+        try:
+            data = sys.stdin.read().strip()
+        finally:
+            readline.set_startup_hook()
+        if data:
+            if input("\nSave entry (y/n) : ").lower() != 'n':
+                entry.title = title
+                entry.content = data
+                entry.save()
+                return True
+    else:
+        print("No title entered! Press Enter to return to main menu")
+        input()
+        clear_screen()
+        return False
+
+
 def view_entry(entry):
     clear_screen()
     print(entry.title)
@@ -103,6 +135,8 @@ def view_entry(entry):
     next_action = input('Action: [e/d/q] : ').lower().strip()
     if next_action == 'd':
         return delete_entry(entry)
+    elif next_action == 'e':
+        return edit_entry(entry)
     elif next_action == 'q':
         return False
 
