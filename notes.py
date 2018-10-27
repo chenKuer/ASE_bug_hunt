@@ -43,7 +43,7 @@ def add_entry_ui():
     """Add a note"""
     title_string = "Title (press {} when finished)".format(finish_key)
     print(title_string)
-    print("="*len(title_string))
+    print("=" * len(title_string))
     title = sys.stdin.read().strip()
     if title:
         entry_string = "\nEnter your entry: (press {} when finished)".format(finish_key)
@@ -142,9 +142,11 @@ def view_entries():
         if next_action == 'q':
             break
         elif next_action == 'n':
-            index += page_size
+            if index + page_size < len(entries):
+                index += page_size
         elif next_action == 'p':
-            index -= page_size
+            if index - page_size >= 0:
+                index -= page_size
         elif next_action.isdigit() and int(next_action) < len(paginated_entries) and int(next_action) >= 0:
             reset_flag = view_entry(paginated_entries[int(next_action)])
 
