@@ -32,8 +32,8 @@ def init():
         exit(0)
 
 
-def add_entry(data, title):
-    m.Note.create(content=data, tags=None, title=title)
+def add_entry(data, title, password):
+    m.Note.create(content=data, tags=None, title=title, password=password)
 
     
 def add_entry_ui():
