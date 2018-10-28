@@ -2,7 +2,7 @@ import base64
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA256
 
-PADDING = "!"
+PADDING = "="
 
 def key_to_store(key):
     return SHA256.new(key.encode()).hexdigest()

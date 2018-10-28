@@ -49,7 +49,7 @@ def add_entry_ui():
         if data:
             if input("\nSave entry (y/n) : ").lower() != 'n':
                 while True:
-                    password = getpass.getpass("Password To protect data(Do not use '!'): ")
+                    password = getpass.getpass("Password To protect data: ")
                     if password == '' or password.count('!') > 0:
                         print("Please input a valid password")
                     else:
