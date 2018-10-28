@@ -5,20 +5,22 @@ import sys
 import traceback
 from collections import OrderedDict
 from peewee import *
+import readline
+import getpass
 
 from models import Note
+import models as m
 from utils import *
-from encryption import *
-
-import time
+from crypto_utils import *
 
 # Kept this function here to keep Travis builds passing till actual tests are added
-def fn(x):
+def fn(x):  
     return x ** 2
 
 
 path = os.getenv('HOME', os.path.expanduser('~')) + '/.notes'
 db = SqliteDatabase(path + '/diary.db')
+m.proxy.initialize(db)
 finish_key = "ctrl+Z" if os.name == 'nt' else "ctrl+D"
 
 def init():
@@ -44,7 +46,7 @@ def add_entry_ui():
     """Add a note"""
     title_string = "Title (press {} when finished)".format(finish_key)
     print(title_string)
-    print("="*len(title_string))
+    print("=" * len(title_string))
     title = sys.stdin.read().strip()
     if title:
         entry_string = "\nEnter your entry: (press {} when finished)".format(finish_key)
@@ -53,8 +55,8 @@ def add_entry_ui():
         if data:
             if input("\nSave entry (y/n) : ").lower() != 'n':
                 while True:
-                    password = input("Input a password to protect the note: ")
-                    if password == '':
+                    password = getpass.getpass("Password To protect data(Do not use '!'): ")
+                    if password == '' or password.count('!') > 0:
                         print("Please input a valid password")
                     else:
                         break
@@ -74,7 +76,6 @@ def menu_loop():
     choice = None
     while choice != 'q':
         clear_screen()
-        print(path)
         banner = r"""
          _   _       _            
         | \ | |     | |           
@@ -99,9 +100,39 @@ def delete_entry(entry):
     return entry.delete_instance()
 
 
+def edit_entry(entry, password):
+    clear_screen()
+    title_string = "Title (press {} when finished)".format(finish_key)
+    print(title_string)
+    print("=" * len(title_string))
+    readline.set_startup_hook(lambda: readline.insert_text(entry.title))
+    try:
+        title = sys.stdin.read().strip()
+    finally:
+        readline.set_startup_hook()
+    if title:
+        entry_string = "\nEnter your entry: (press {} when finished)".format(finish_key)
+        print(entry_string)
+        readline.set_startup_hook(lambda: readline.insert_text(entry.content))
+        try:
+            data = sys.stdin.read().strip()
+        finally:
+            readline.set_startup_hook()
+        if data:
+            if input("\nSave entry (y/n) : ").lower() != 'n':
+                entry.title = title
+                entry.content = encrypt(data, password)
+                entry.save()
+                return True
+    else:
+        print("No title entered! Press Enter to return to main menu")
+        input()
+        clear_screen()
+        return False
+
+
 def view_entry(entry, password):
     clear_screen()
-
     print(entry.title)
     print("=" * len(entry.title))
     print(decrypt(entry.content, password))
@@ -112,32 +143,39 @@ def view_entry(entry, password):
 
     next_action = input('Action: [e/d/q] : ').lower().strip()
     if next_action == 'd':
-        delete_entry(entry)
+        return delete_entry(entry)
+    elif next_action == 'e':
+        return edit_entry(entry, password)
     elif next_action == 'q':
-        return
+        return False
 
 
 def view_entries():
     """View all the notes"""
     page_size = 2
-    entries = Note.select().order_by(Note.timestamp.desc())
-    entries = list(entries)
-    if not entries:
-        print("Your search had no results. Press enter to return to the main menu!")
-        input()
-        clear_screen()
-        return
-
     index = 0
+    reset_flag = True
 
     while 1:
         clear_screen()
+        if reset_flag:
+            # Get entries if reset_flag is True
+            # Will be True initially and on delete/edit entry
+            entries = Note.select().order_by(Note.timestamp.desc())
+            entries = list(entries)
+            if not entries:
+                print("Your search had no results. Press enter to return to the main menu!")
+                input()
+                clear_screen()
+                return
+            index = 0
+            reset_flag = False
         paginated_entries = get_paginated_entries(entries, index, page_size)
         for i in range(len(paginated_entries)):
             entry = paginated_entries[i]
             timestamp = entry.timestamp.strftime("%A %B %d, %Y %I:%M%p")
-            head = "\"{title}\" \"{password}\" \"{content}\" on \"{timestamp}\"".format(
-                title=entry.title, password=entry.password, content= entry.content, timestamp=timestamp)
+            head = "\"{title}\" on \"{timestamp}\"".format(
+                title=entry.title, timestamp=timestamp)
             print(str(i) + ") " + head)
         print('n) next page')
         print('p) previous page')
@@ -147,21 +185,21 @@ def view_entries():
         if next_action == 'q':
             break
         elif next_action == 'n':
-            index += page_size
+            if index + page_size < len(entries):
+                index += page_size
         elif next_action == 'p':
-            index -= page_size
+            if index - page_size >= 0:
+                index -= page_size
         elif next_action.isdigit() and int(next_action) < len(paginated_entries) and int(next_action) >= 0:
-            #TODO Ask for password. Show Error or Display content.
             while 1:
-                password = input("Input the password to retrieve the text: ")
+                password = getpass.getpass('Password To Encrypt: ')
                 entry = paginated_entries[int(next_action)]
                 if key_to_store(password) != entry.password:
                     if input("Password is incorrect. Do you want to retry? (y/n): ").lower() != 'y':
                         break
                 else:
-                    view_entry(paginated_entries[int(next_action)], password)
+                    reset_flag = view_entry(paginated_entries[int(next_action)], password)
                     break
-
 
 MENU = OrderedDict([
     ('a', add_entry_ui),
