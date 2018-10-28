@@ -2,6 +2,7 @@
 from notes import fn, add_entry, delete_entry, edit_entry 
 from peewee import *
 import models as m
+from crypto_utils import encrypt, key_to_store
 
 db_temp = SqliteDatabase(':memory:')
 
@@ -32,20 +33,25 @@ def test_delete_entry():
         flag2 = 0
     assert flag1 == flag2
 
+
 def test_edit_entry():
     title = "lost in this world"
     content = "Batman is forever lost!!!"
-    m.Note.create(content=content, tags=None, title=title)
+    password = "masterpassword"
+    password_to_store = key_to_store(password)
+    # Need to encrypt before storing
+    m.Note.create(content=content, tags=None, title=title, password=password_to_store)
     entry = m.Note.get(m.Note.title == title)
     new_title = "Superhero Found"
     new_content = "Robin to the rescue!!!"
-    edit_entry(entry, new_title, new_content)
+    encryped_data = encrypt(new_content, password)
+    edit_entry(entry, new_title, new_content, password)
     entry = m.Note.select().where(m.Note.title == title)
     flag = 1
     if entry.exists():
         flag = 0
     entry = m.Note.get(m.Note.title == new_title)
-    assert (entry.title, entry.content, flag) == (new_title, new_content, 1)
+    assert (entry.title, entry.content, entry.password, flag) == (new_title, encryped_data, password_to_store, 1)
 
 
 
