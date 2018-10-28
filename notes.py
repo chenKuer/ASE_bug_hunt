@@ -8,7 +8,9 @@ from peewee import *
 
 from models import Note
 from utils import *
+from encryption import *
 
+import time
 
 # Kept this function here to keep Travis builds passing till actual tests are added
 def fn(x):
@@ -18,7 +20,6 @@ def fn(x):
 path = os.getenv('HOME', os.path.expanduser('~')) + '/.notes'
 db = SqliteDatabase(path + '/diary.db')
 finish_key = "ctrl+Z" if os.name == 'nt' else "ctrl+D"
-
 
 def init():
     """
@@ -35,8 +36,8 @@ def init():
         exit(0)
 
 
-def add_entry(data, title):
-    Note.create(content=data, tags=None, title=title)
+def add_entry(data, title, password):
+    Note.create(content=data, tags=None, title=title, password=password)
 
 
 def add_entry_ui():
@@ -51,7 +52,15 @@ def add_entry_ui():
         data = sys.stdin.read().strip()
         if data:
             if input("\nSave entry (y/n) : ").lower() != 'n':
-                add_entry(data, title)
+                while True:
+                    password = input("Input a password to protect the note: ")
+                    if password == '':
+                        print("Please input a valid password")
+                    else:
+                        break
+                password_to_store = key_to_store(password)
+                encryped_data = encrypt(data, password)
+                add_entry(encryped_data, title, password_to_store)
                 print("Saved successfully")
     else:
         print("No title entered! Press Enter to return to main menu")
@@ -62,10 +71,10 @@ def add_entry_ui():
 
 def menu_loop():
     """To display the diary menu"""
-
     choice = None
     while choice != 'q':
         clear_screen()
+        print(path)
         banner = r"""
          _   _       _            
         | \ | |     | |           
@@ -90,11 +99,12 @@ def delete_entry(entry):
     return entry.delete_instance()
 
 
-def view_entry(entry):
+def view_entry(entry, password):
     clear_screen()
+
     print(entry.title)
     print("=" * len(entry.title))
-    print(entry.content)
+    print(decrypt(entry.content, password))
 
     print('e) edit entry')
     print('d) delete entry')
@@ -126,8 +136,8 @@ def view_entries():
         for i in range(len(paginated_entries)):
             entry = paginated_entries[i]
             timestamp = entry.timestamp.strftime("%A %B %d, %Y %I:%M%p")
-            head = "\"{title}\" on \"{timestamp}\"".format(
-                title=entry.title, timestamp=timestamp)
+            head = "\"{title}\" \"{password}\" \"{content}\" on \"{timestamp}\"".format(
+                title=entry.title, password=entry.password, content= entry.content, timestamp=timestamp)
             print(str(i) + ") " + head)
         print('n) next page')
         print('p) previous page')
@@ -141,7 +151,16 @@ def view_entries():
         elif next_action == 'p':
             index -= page_size
         elif next_action.isdigit() and int(next_action) < len(paginated_entries) and int(next_action) >= 0:
-            view_entry(paginated_entries[int(next_action)])
+            #TODO Ask for password. Show Error or Display content.
+            while 1:
+                password = input("Input the password to retrieve the text: ")
+                entry = paginated_entries[int(next_action)]
+                if key_to_store(password) != entry.password:
+                    if input("Password is incorrect. Do you want to retry? (y/n): ").lower() != 'y':
+                        break
+                else:
+                    view_entry(paginated_entries[int(next_action)], password)
+                    break
 
 
 MENU = OrderedDict([
