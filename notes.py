@@ -84,8 +84,13 @@ def menu_loop():
 def delete_entry(entry):
     return entry.delete_instance()
 
+def edit_entry(entry, title, data):
+    entry.title = title
+    entry.content = data
+    entry.save()
+    return True
 
-def edit_entry(entry):
+def edit_entry_view(entry):
     clear_screen()
     title_string = "Title (press {} when finished)".format(finish_key)
     print(title_string)
@@ -105,10 +110,7 @@ def edit_entry(entry):
             readline.set_startup_hook()
         if data:
             if input("\nSave entry (y/n) : ").lower() != 'n':
-                entry.title = title
-                entry.content = data
-                entry.save()
-                return True
+                edit_entry(entry, title, data)
     else:
         print("No title entered! Press Enter to return to main menu")
         input()
@@ -130,7 +132,7 @@ def view_entry(entry):
     if next_action == 'd':
         return delete_entry(entry)
     elif next_action == 'e':
-        return edit_entry(entry)
+        return edit_entry_view(entry)
     elif next_action == 'q':
         return False
 
