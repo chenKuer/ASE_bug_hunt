@@ -192,7 +192,7 @@ def view_entries():
                 index -= page_size
         elif next_action.isdigit() and int(next_action) < len(paginated_entries) and int(next_action) >= 0:
             while 1:
-                password = getpass.getpass('Password To Encrypt: ')
+                password = getpass.getpass('Password To Retrieve Content: ')
                 entry = paginated_entries[int(next_action)]
                 if key_to_store(password) != entry.password:
                     if input("Password is incorrect. Do you want to retry? (y/n): ").lower() != 'y':
