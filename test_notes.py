@@ -24,12 +24,15 @@ def test_delete_entry():
     entry = m.Note.select().where(m.Note.title == title)
     if entry.exists():
         flag1 = 1
+        entry = m.Note.get(m.Note.title == title)
     delete_entry(entry)
     entry = m.Note.select().where(m.Note.title == title)
     flag2 = 1
     if entry.exists():
         flag2 = 0
     assert flag1 == flag2
+
+
 
 
 
