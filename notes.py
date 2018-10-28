@@ -8,15 +8,9 @@ from peewee import *
 import readline
 import getpass
 
-from models import Note
 import models as m
 from utils import *
 from crypto_utils import *
-
-# Kept this function here to keep Travis builds passing till actual tests are added
-def fn(x):  
-    return x ** 2
-
 
 path = os.getenv('HOME', os.path.expanduser('~')) + '/.notes'
 db = SqliteDatabase(path + '/diary.db')
@@ -32,16 +26,16 @@ def init():
         os.makedirs(path)
     try:
         db.connect()
-        db.create_tables([Note], safe=True)
+        db.create_tables([m.Note], safe=True)
     except DatabaseError as err:
         traceback.print_tb(err.__traceback__)
         exit(0)
 
 
-def add_entry(data, title, password):
-    Note.create(content=data, tags=None, title=title, password=password)
+def add_entry(data, title):
+    m.Note.create(content=data, tags=None, title=title)
 
-
+    
 def add_entry_ui():
     """Add a note"""
     title_string = "Title (press {} when finished)".format(finish_key)
@@ -99,8 +93,13 @@ def menu_loop():
 def delete_entry(entry):
     return entry.delete_instance()
 
+def edit_entry(entry, title, data, password):
+    entry.title = title
+    entry.content = encrypt(data, password)
+    entry.save()
+    return True
 
-def edit_entry(entry, password):
+def edit_entry_view(entry, password):
     clear_screen()
     title_string = "Title (press {} when finished)".format(finish_key)
     print(title_string)
@@ -120,10 +119,7 @@ def edit_entry(entry, password):
             readline.set_startup_hook()
         if data:
             if input("\nSave entry (y/n) : ").lower() != 'n':
-                entry.title = title
-                entry.content = encrypt(data, password)
-                entry.save()
-                return True
+                edit_entry(entry, title, data, password)
     else:
         print("No title entered! Press Enter to return to main menu")
         input()
@@ -145,7 +141,7 @@ def view_entry(entry, password):
     if next_action == 'd':
         return delete_entry(entry)
     elif next_action == 'e':
-        return edit_entry(entry, password)
+        return edit_entry_view(entry, password)
     elif next_action == 'q':
         return False
 
@@ -161,7 +157,7 @@ def view_entries():
         if reset_flag:
             # Get entries if reset_flag is True
             # Will be True initially and on delete/edit entry
-            entries = Note.select().order_by(Note.timestamp.desc())
+            entries = m.Note.select().order_by(m.Note.timestamp.desc())
             entries = list(entries)
             if not entries:
                 print("Your search had no results. Press enter to return to the main menu!")
