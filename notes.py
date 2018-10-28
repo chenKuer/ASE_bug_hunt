@@ -6,8 +6,6 @@ import traceback
 from collections import OrderedDict
 from peewee import *
 import readline
-
-from models import Note
 import models as m
 from utils import *
 
@@ -32,14 +30,14 @@ def init():
         os.makedirs(path)
     try:
         db.connect()
-        db.create_tables([Note], safe=True)
+        db.create_tables([m.Note], safe=True)
     except DatabaseError as err:
         traceback.print_tb(err.__traceback__)
         exit(0)
 
 
 def add_entry(data, title):
-    Note.create(content=data, tags=None, title=title)
+    m.Note.create(content=data, tags=None, title=title)
 
 
 def add_entry_ui():
@@ -154,7 +152,7 @@ def view_entries():
         if reset_flag:
             # Get entries if reset_flag is True
             # Will be True initially and on delete/edit entry
-            entries = Note.select().order_by(Note.timestamp.desc())
+            entries = m.Note.select().order_by(m.Note.timestamp.desc())
             entries = list(entries)
             if not entries:
                 print("Your search had no results. Press enter to return to the main menu!")
