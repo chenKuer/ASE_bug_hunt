@@ -9,12 +9,6 @@ import readline
 import models as m
 from utils import *
 
-
-# Kept this function here to keep Travis builds passing till actual tests are added
-def fn(x):  
-    return x ** 2
-
-
 path = os.getenv('HOME', os.path.expanduser('~')) + '/.notes'
 db = SqliteDatabase(path + '/diary.db')
 m.proxy.initialize(db)
