@@ -49,7 +49,7 @@ def test_edit_entry():
     new_content = "Robin to the rescue!!!"
     encryped_data = encrypt(new_content, password)
     edit_entry(entry, new_title, new_content, password)
-    entry = m.Note.select().where(m.Note.title == title)
+    entry = m.Note.select().where(m.Note.title == title) # pylint: disable=assignment-from-no-return
     flag = 1
     if entry.exists():
         flag = 0
