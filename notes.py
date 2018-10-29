@@ -4,29 +4,31 @@ import os
 import sys
 import traceback
 from collections import OrderedDict
-from peewee import *
 import readline
 import getpass
+from peewee import *  # pylint: disable=redefined-builtin,wildcard-import
+
 
 import models as m
-from utils import *
-from crypto_utils import *
+from utils import clear_screen, get_paginated_entries
+from crypto_utils import *  # pylint: disable=wildcard-import
 
-path = os.getenv('HOME', os.path.expanduser('~')) + '/.notes'
-db = SqliteDatabase(path + '/diary.db')
-m.proxy.initialize(db)
-finish_key = "ctrl+Z" if os.name == 'nt' else "ctrl+D"
+PATH = os.getenv('HOME', os.path.expanduser('~')) + '/.notes'
+DB = SqliteDatabase(PATH + '/diary.db')
+m.proxy.initialize(DB)
+FINISH_KEY = "ctrl+Z" if os.name == 'nt' else "ctrl+D"
+
 
 def init():
     """
     Initialize and create database
     :return: void
     """
-    if not os.path.exists(path):
-        os.makedirs(path)
+    if not os.path.exists(PATH):
+        os.makedirs(PATH)
     try:
-        db.connect()
-        db.create_tables([m.Note], safe=True)
+        DB.connect()
+        DB.create_tables([m.Note], safe=True)
     except DatabaseError as err:
         traceback.print_tb(err.__traceback__)
         exit(0)
@@ -38,22 +40,23 @@ def add_entry(data, title, password):
 def get_input():
     title = sys.stdin.read().strip()
     return title
-    
+
+
 def add_entry_ui():
     """Add a note"""
-    title_string = "Title (press {} when finished)".format(finish_key)
+    title_string = "Title (press {} when finished)".format(FINISH_KEY)
     print(title_string)
     print("=" * len(title_string))
     title = get_input()
     if title:
-        entry_string = "\nEnter your entry: (press {} when finished)".format(finish_key)
+        entry_string = "\nEnter your entry: (press {} when finished)".format(FINISH_KEY)
         print(entry_string)
         data = get_input()
         if data:
             if input("\nSave entry (y/n) : ").lower() != 'n':
                 while True:
                     password = getpass.getpass("Password To protect data: ")
-                    if len(password) == 0:
+                    if not password:
                         print("Please input a valid password")
                     else:
                         break
@@ -96,15 +99,17 @@ def menu_loop():
 def delete_entry(entry):
     return entry.delete_instance()
 
+
 def edit_entry(entry, title, data, password):
     entry.title = title
     entry.content = encrypt(data, password)
     entry.save()
     return True
 
-def edit_entry_view(entry, password):
+
+def edit_entry_view(entry, password):  # pylint: disable=inconsistent-return-statements
     clear_screen()
-    title_string = "Title (press {} when finished)".format(finish_key)
+    title_string = "Title (press {} when finished)".format(FINISH_KEY)
     print(title_string)
     print("=" * len(title_string))
     readline.set_startup_hook(lambda: readline.insert_text(entry.title))
@@ -113,7 +118,7 @@ def edit_entry_view(entry, password):
     finally:
         readline.set_startup_hook()
     if title:
-        entry_string = "\nEnter your entry: (press {} when finished)".format(finish_key)
+        entry_string = "\nEnter your entry: (press {} when finished)".format(FINISH_KEY)
         print(entry_string)
         readline.set_startup_hook(lambda: readline.insert_text(entry.content))
         try:
@@ -130,7 +135,7 @@ def edit_entry_view(entry, password):
         return False
 
 
-def view_entry(entry, password):
+def view_entry(entry, password):  # pylint: disable=inconsistent-return-statements
     clear_screen()
     print(entry.title)
     print("=" * len(entry.title))
@@ -143,9 +148,9 @@ def view_entry(entry, password):
     next_action = input('Action: [e/d/q] : ').lower().strip()
     if next_action == 'd':
         return delete_entry(entry)
-    elif next_action == 'e':
+    if next_action == 'e':
         return edit_entry_view(entry, password)
-    elif next_action == 'q':
+    if next_action == 'q':
         return False
 
 
@@ -160,7 +165,7 @@ def view_entries():
         if reset_flag:
             # Get entries if reset_flag is True
             # Will be True initially and on delete/edit entry
-            entries = m.Note.select().order_by(m.Note.timestamp.desc())
+            entries = m.Note.select().order_by(m.Note.timestamp.desc())  # pylint: disable=assignment-from-no-return
             entries = list(entries)
             if not entries:
                 print("Your search had no results. Press enter to return to the main menu!")
@@ -170,8 +175,7 @@ def view_entries():
             index = 0
             reset_flag = False
         paginated_entries = get_paginated_entries(entries, index, page_size)
-        for i in range(len(paginated_entries)):
-            entry = paginated_entries[i]
+        for i, entry in enumerate(paginated_entries):
             timestamp = entry.timestamp.strftime("%A %B %d, %Y %I:%M%p")
             head = "\"{title}\" on \"{timestamp}\"".format(
                 title=entry.title, timestamp=timestamp)
@@ -189,7 +193,7 @@ def view_entries():
         elif next_action == 'p':
             if index - page_size >= 0:
                 index -= page_size
-        elif next_action.isdigit() and int(next_action) < len(paginated_entries) and int(next_action) >= 0:
+        elif next_action.isdigit() and 0 <= int(next_action) < len(paginated_entries):
             while 1:
                 password = getpass.getpass('Password To Retrieve Content: ')
                 entry = paginated_entries[int(next_action)]

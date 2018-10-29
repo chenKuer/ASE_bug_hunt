@@ -3,7 +3,7 @@ language: python
 python: 
   - "3.6"
 script: 
-  - pytest
+  - pytest --pylint --pylint-rcfile=.pylintrc
 notifications:
   email:
     recipients:

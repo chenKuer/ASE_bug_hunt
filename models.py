@@ -1,12 +1,12 @@
 import datetime
 import os
 
-from peewee import *
+from peewee import *  # pylint: disable=redefined-builtin,wildcard-import
 
-path = os.getenv('HOME', os.path.expanduser('~')) + '/.notes'
-#db = SqliteDatabase(path + '/diary.db')
+PATH = os.getenv('HOME', os.path.expanduser('~')) + '/.notes'
 
-proxy = Proxy()
+proxy = Proxy()  # pylint: disable=invalid-name
+
 
 class Note(Model):
     """
@@ -18,5 +18,5 @@ class Note(Model):
     timestamp = DateTimeField(default=datetime.datetime.now)
     tags = CharField(null=True)
 
-    class Meta:
+    class Meta: # pylint: disable=too-few-public-methods
         database = proxy

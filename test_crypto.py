@@ -1,15 +1,15 @@
 import base64
 from Cryptodome.Cipher import AES
 from Cryptodome.Hash import SHA256
-from crypto_utils import *
+from crypto_utils import * # pylint: disable=wildcard-import
 
 PADDING = "="
 
 
 def test_key_to_store():
-    input = ["hello", ""]
+    input_string = ["hello", ""]
     flag = 1
-    for i in input:
+    for i in input_string:
         if key_to_store(i) == SHA256.new(i.encode()).hexdigest():
             flag = flag & 1
         else:
@@ -17,10 +17,11 @@ def test_key_to_store():
 
     assert flag == 1
 
+
 def test_key_hash():
-    input = ["hello", ""]
+    input_string = ["hello", ""]
     flag = 1
-    for i in input:
+    for i in input_string:
         if key_hash(i) == SHA256.new(i.encode()).digest():
             flag = flag & 1
         else:
@@ -28,10 +29,11 @@ def test_key_hash():
 
     assert flag == 1
 
+
 def test_encrypt():
-    input = [("hello", "key"), ("hello2", ""), ("", "key"), ("","")]
+    input_string = [("hello", "key"), ("hello2", ""), ("", "key"), ("", "")]
     flag = 1
-    for i in input:
+    for i in input_string:
         text, key = i[0], i[1]
         answer = encrypt(text, key)
         while len(text) % 16 != 0:
@@ -45,12 +47,12 @@ def test_encrypt():
 
     assert flag == 1
 
+
 def test_decrypt():
-    input = [("hello", "key"), ("hello2", ""), ("", "key"), ("","")]
+    input_string = [("hello", "key"), ("hello2", ""), ("", "key"), ("", "")]
     flag = 1
-    for i in input:
+    for i in input_string:
         text, key = i[0], i[1]
-        answer = encrypt(text, key)
         while len(text) % 16 != 0:
             text += PADDING
         cipher = AES.new(key_hash(key), AES.MODE_ECB)
@@ -62,6 +64,4 @@ def test_decrypt():
             flag = flag & 1
         else:
             flag = 0
-       
-    assert flag == 1    
-        
+    assert flag == 1
