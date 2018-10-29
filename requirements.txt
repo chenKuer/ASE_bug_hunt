@@ -1,4 +1,6 @@
+mock
 pytest
 peewee
 pyreadline
 pycryptodomex
+pytest-pylint

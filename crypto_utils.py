@@ -4,11 +4,14 @@ from Cryptodome.Hash import SHA256
 
 PADDING = "="
 
+
 def key_to_store(key):
     return SHA256.new(key.encode()).hexdigest()
 
+
 def key_hash(key):
     return SHA256.new(key.encode()).digest()
+
 
 def encrypt(text, key):
     while len(text) % 16 != 0:
@@ -16,6 +19,7 @@ def encrypt(text, key):
     cipher = AES.new(key_hash(key), AES.MODE_ECB)
     encrypted = cipher.encrypt(text.encode())
     return base64.b64encode(encrypted).decode()
+
 
 def decrypt(text, key):
     cipher = AES.new(key_hash(key), AES.MODE_ECB)
