@@ -35,22 +35,25 @@ def init():
 def add_entry(data, title, password):
     m.Note.create(content=data, tags=None, title=title, password=password)
 
+def get_input():
+    title = sys.stdin.read().strip()
+    return title
     
 def add_entry_ui():
     """Add a note"""
     title_string = "Title (press {} when finished)".format(finish_key)
     print(title_string)
     print("=" * len(title_string))
-    title = sys.stdin.read().strip()
+    title = get_input()
     if title:
         entry_string = "\nEnter your entry: (press {} when finished)".format(finish_key)
         print(entry_string)
-        data = sys.stdin.read().strip()
+        data = get_input()
         if data:
             if input("\nSave entry (y/n) : ").lower() != 'n':
                 while True:
                     password = getpass.getpass("Password To protect data: ")
-                    if password == '' or password.count('!') > 0:
+                    if len(password) == 0:
                         print("Please input a valid password")
                     else:
                         break
