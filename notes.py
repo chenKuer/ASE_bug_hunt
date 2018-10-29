@@ -148,9 +148,9 @@ def view_entry(entry, password):  # pylint: disable=inconsistent-return-statemen
     next_action = input('Action: [e/d/q] : ').lower().strip()
     if next_action == 'd':
         return delete_entry(entry)
-    elif next_action == 'e':
+    if next_action == 'e':
         return edit_entry_view(entry, password)
-    elif next_action == 'q':
+    if next_action == 'q':
         return False
 
 
@@ -165,7 +165,7 @@ def view_entries():
         if reset_flag:
             # Get entries if reset_flag is True
             # Will be True initially and on delete/edit entry
-            entries = m.Note.select().order_by(m.Note.timestamp.desc())
+            entries = m.Note.select().order_by(m.Note.timestamp.desc())  # pylint: disable=assignment-from-no-return
             entries = list(entries)
             if not entries:
                 print("Your search had no results. Press enter to return to the main menu!")

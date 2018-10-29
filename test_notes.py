@@ -25,12 +25,12 @@ def test_delete_entry():
     title = "yo"
     content = "Hello Lol"
     m.Note.create(content=content, tags=None, title=title)
-    entry = m.Note.select().where(m.Note.title == title)
+    entry = m.Note.select().where(m.Note.title == title)  # pylint: disable=assignment-from-no-return
     if entry.exists():
         flag1 = 1
-        entry = m.Note.get(m.Note.title == title)
+        entry = m.Note.get(m.Note.title == title)  # pylint: disable=assignment-from-no-return
     delete_entry(entry)
-    entry = m.Note.select().where(m.Note.title == title)
+    entry = m.Note.select().where(m.Note.title == title)  # pylint: disable=assignment-from-no-return
     flag2 = 1
     if entry.exists():
         flag2 = 0

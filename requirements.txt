@@ -1,5 +1,5 @@
 mock
-pytest==3.5.1
+pytest>=3.5.1
 peewee
 pyreadline
 pycryptodomex
