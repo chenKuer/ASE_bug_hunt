@@ -1,3 +1,4 @@
 pytest
 peewee
 pyreadline
+pycryptodomex

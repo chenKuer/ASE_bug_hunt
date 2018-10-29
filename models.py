@@ -14,6 +14,7 @@ class Note(Model):
     """
     title = CharField()
     content = TextField()
+    password = TextField(null=True)
     timestamp = DateTimeField(default=datetime.datetime.now)
     tags = CharField(null=True)
 
